@@ -1,0 +1,8 @@
+fastapi==0.112.1
+uvicorn[standard]==0.30.6
+pydantic==2.8.2
+numpy==1.26.4
+soundfile==0.12.1
+torch==2.4.0
+vibevoice @ git+https://github.com/microsoft/VibeVoice.git
+pydub==0.25.1
