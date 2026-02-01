@@ -40,6 +40,25 @@ curl -X POST http://localhost:8000/v1/audio/speech \
   }' --output output.wav
 ```
 
+## OpenAI Python client example
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="not-needed",  # Server ignores API keys by default.
+)
+
+response = client.audio.speech.create(
+    model="microsoft/VibeVoice-realtime-0.5B",
+    voice="default",
+    input="Hello from the OpenAI Python client!",
+    response_format="wav",
+)
+response.stream_to_file("output.wav")
+```
+
 ## Configuration
 
 | Env var | Description | Default |
