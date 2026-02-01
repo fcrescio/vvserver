@@ -1,2 +1,57 @@
 # vvserver
-a router-like server for vibevoice asr and tts inference
+
+Containerized VibeVoice TTS microservice with an OpenAI-compatible `/v1/audio/speech` endpoint.
+
+## Features
+- FastAPI service exposing an OpenAI-style TTS endpoint.
+- Streams audio responses when `stream=true`.
+- Automatic model unload after idle timeout to free GPU VRAM.
+- Configurable VibeVoice pipeline import and model ID.
+
+## Quick start
+
+```bash
+# Build the image (requires NVIDIA container runtime)
+docker build -t vvserver:latest .
+
+# Run with GPU access
+# - MODEL_IDLE_TIMEOUT_SECONDS controls how long the model can remain idle before unloading
+# - VIBEVOICE_MODEL_ID defaults to microsoft/VibeVoice-realtime-0.5B
+# - VIBEVOICE_PIPELINE points at the pipeline import path
+
+docker run --gpus all -p 8000:8000 \
+  -e MODEL_IDLE_TIMEOUT_SECONDS=300 \
+  -e VIBEVOICE_MODEL_ID=microsoft/VibeVoice-realtime-0.5B \
+  -e VIBEVOICE_PIPELINE=vibevoice.pipeline:VibeVoicePipeline \
+  vvserver:latest
+```
+
+## Request example
+
+```bash
+curl -X POST http://localhost:8000/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "microsoft/VibeVoice-realtime-0.5B",
+    "input": "Hello from VibeVoice!",
+    "voice": "default",
+    "response_format": "wav",
+    "stream": true
+  }' --output output.wav
+```
+
+## Configuration
+
+| Env var | Description | Default |
+| --- | --- | --- |
+| `VIBEVOICE_MODEL_ID` | Hugging Face model ID | `microsoft/VibeVoice-realtime-0.5B` |
+| `VIBEVOICE_DEVICE` | Device passed to pipeline | `cuda` |
+| `VIBEVOICE_DTYPE` | Torch dtype passed to pipeline | `float16` |
+| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`) | `vibevoice.pipeline:VibeVoicePipeline` |
+| `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
+| `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
+| `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |
+
+## Notes
+- `mp3`, `aac`, and `opus` responses require ffmpeg (installed in the Docker image) and `pydub`.
+- The server uses a conservative fallback for the VibeVoice pipeline output. If your pipeline uses a different API, update `app/main.py` accordingly.
