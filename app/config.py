@@ -2,6 +2,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+import logging
+
+
+def _resolve_log_level(value: str) -> int:
+    level = logging.getLevelName(value.upper())
+    if isinstance(level, int):
+        return level
+    return logging.INFO
 
 
 @dataclass(frozen=True)
@@ -20,6 +28,7 @@ class Settings:
         "VIBEVOICE_PIPELINE",
         "app.vibevoice_pipeline:VibeVoiceStreamingPipeline",
     )
+    log_level: int = _resolve_log_level(os.getenv("LOG_LEVEL", "INFO"))
 
 
 settings = Settings()

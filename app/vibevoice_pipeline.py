@@ -180,12 +180,19 @@ class VibeVoiceStreamingPipeline:
 
     def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
         del voice, speed
+        logger.info("VibeVoice infer received text_length=%s", len(text))
+        logger.debug("VibeVoice infer text preview: %r", text[:200])
         script = self._format_script(text)
+        logger.info("VibeVoice formatted script_length=%s", len(script))
+        logger.debug("VibeVoice formatted script preview: %r", script[:200])
         inputs = self.processor.process_input_with_cached_prompt(
             text=script,
             cached_prompt=self.cached_prompt,
             return_tensors="pt",
         )
+        input_ids = inputs.get("input_ids")
+        if isinstance(input_ids, torch.Tensor):
+            logger.info("VibeVoice input_ids shape=%s", tuple(input_ids.shape))
         tensor_inputs = {
             key: value.to(self.device)
             for key, value in inputs.items()
@@ -217,6 +224,6 @@ class VibeVoiceStreamingPipeline:
     @staticmethod
     def _format_script(text: str) -> str:
         stripped = text.strip()
-        if re.match(r"^Speaker\\s+\\d+\\s*:", stripped, re.IGNORECASE):
+        if re.match(r"^Speaker\s+\d+\s*:", stripped, re.IGNORECASE):
             return stripped
         return f"Speaker 0: {stripped}"
