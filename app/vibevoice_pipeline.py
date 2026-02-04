@@ -91,11 +91,10 @@ class VibeVoiceStreamingPipeline:
         device: torch.device,
         dtype: str | torch.dtype,
     ) -> tuple[torch.dtype, str | None, str]:
-        attn_override = os.getenv("VIBEVOICE_ATTN_IMPLEMENTATION")
         if str(device).startswith("mps"):
             torch_dtype = torch.float32
             device_map = None
-            attn_impl = "eager"
+            attn_impl = "sdpa"
         elif str(device).startswith("cuda"):
             torch_dtype = torch.bfloat16
             device_map = "cuda"
@@ -103,9 +102,7 @@ class VibeVoiceStreamingPipeline:
         else:
             torch_dtype = _resolve_dtype(dtype)
             device_map = "cpu"
-            attn_impl = "eager"
-        if attn_override:
-            attn_impl = attn_override
+            attn_impl = "sdpa"
         return torch_dtype, device_map, attn_impl
 
     @staticmethod
@@ -132,14 +129,14 @@ class VibeVoiceStreamingPipeline:
         except Exception:
             if attn_impl == "flash_attention_2":
                 logger.warning(
-                    "Flash attention load failed, falling back to eager attention.",
+                    "Flash attention load failed, falling back to SDPA.",
                     exc_info=True,
                 )
                 model = VibeVoiceStreamingForConditionalGenerationInference.from_pretrained(
                     model_id,
                     torch_dtype=torch_dtype,
                     device_map=device_map,
-                    attn_implementation="eager",
+                    attn_implementation="sdpa",
                 )
             else:
                 raise
