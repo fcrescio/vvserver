@@ -21,6 +21,7 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
 
 RUN python3 -m pip install --no-cache-dir torch==2.4.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
+RUN python3 -m pip install --no-cache-dir https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 #RUN python3 -m pip install --no-cache-dir flash-attn==2.6.3
 
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
