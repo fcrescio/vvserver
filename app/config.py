@@ -17,6 +17,7 @@ class Settings:
     model_id: str = os.getenv("VIBEVOICE_MODEL_ID", "microsoft/VibeVoice-realtime-0.5B")
     device: str = os.getenv("VIBEVOICE_DEVICE", "cuda")
     dtype: str = os.getenv("VIBEVOICE_DTYPE", "float16")
+    inference_steps: int = int(os.getenv("VIBEVOICE_INFERENCE_STEPS", "5"))
     model_idle_timeout_seconds: int = int(
         os.getenv("MODEL_IDLE_TIMEOUT_SECONDS", "300")
     )

@@ -42,7 +42,10 @@ class ModelManager:
             pipeline_cls = getattr(module, attr_name)
 
             pipeline = pipeline_cls.from_pretrained(
-                settings.model_id, device=settings.device, dtype=settings.dtype
+                settings.model_id,
+                device=settings.device,
+                dtype=settings.dtype,
+                inference_steps=settings.inference_steps,
             )
 
             sample_rate = getattr(pipeline, "sample_rate", None)
