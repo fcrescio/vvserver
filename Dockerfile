@@ -19,9 +19,9 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
 
-RUN python3 -m pip install --no-cache-dir torch==2.4.0
+RUN python3 -m pip install --no-cache-dir torch==2.4.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
-RUN python3 -m pip install --no-cache-dir --no-build-isolation flash-attn==2.6.3
+RUN python3 -m pip install --no-cache-dir flash-attn==2.6.3
 
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 
