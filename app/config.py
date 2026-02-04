@@ -18,7 +18,7 @@ class Settings:
     max_text_length: int = int(os.getenv("MAX_TEXT_LENGTH", "1000"))
     pipeline_import: str = os.getenv(
         "VIBEVOICE_PIPELINE",
-        "vibevoice.pipeline:VibeVoicePipeline",
+        "app.vibevoice_pipeline:VibeVoiceStreamingPipeline",
     )
 
 
