@@ -66,6 +66,7 @@ response.stream_to_file("output.wav")
 | `VIBEVOICE_MODEL_ID` | Hugging Face model ID | `microsoft/VibeVoice-realtime-0.5B` |
 | `VIBEVOICE_DEVICE` | Device passed to pipeline | `cuda` |
 | `VIBEVOICE_DTYPE` | Torch dtype passed to pipeline | `float16` |
+| `VIBEVOICE_ATTN_IMPLEMENTATION` | Attention implementation (`flash_attention_2`, `sdpa`, `eager`) | (auto) |
 | `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`) | `app.vibevoice_pipeline:VibeVoiceStreamingPipeline` |
 | `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
