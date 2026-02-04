@@ -31,6 +31,15 @@ class TTSRequest(BaseModel):
 
 async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
     loaded = await model_manager.load()
+    logger.info(
+        "Synthesizing audio for request: input_length=%s voice=%s speed=%s format=%s stream=%s",
+        len(payload.input),
+        payload.voice,
+        payload.speed,
+        payload.response_format,
+        payload.stream,
+    )
+    logger.debug("Request input preview: %r", payload.input[:200])
 
     def _infer() -> Any:
         pipeline = loaded.pipeline
