@@ -310,7 +310,7 @@ class VibeVoiceStreamingPipeline:
 
         audio = outputs.speech_outputs[0]
         if isinstance(audio, torch.Tensor):
-            audio = audio.detach().cpu().numpy()
+            audio = audio.detach().to(torch.float32).cpu().numpy()
 
         return audio, self.sample_rate
 
