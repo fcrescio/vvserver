@@ -14,7 +14,7 @@ from app.audio import chunk_bytes, encode_audio
 from app.config import settings
 from app.model import model_manager
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=settings.log_level)
 logger = logging.getLogger("vvserver")
 
 app = FastAPI(title="VibeVoice TTS", version="0.1.0")

@@ -70,6 +70,7 @@ response.stream_to_file("output.wav")
 | `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
 | `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |
+| `LOG_LEVEL` | Python log level (`DEBUG`, `INFO`, etc.) | `INFO` |
 
 ## Notes
 - `mp3`, `aac`, and `opus` responses require ffmpeg (installed in the Docker image) and `pydub`.
