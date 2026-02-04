@@ -22,7 +22,7 @@ docker build -t vvserver:latest .
 docker run --gpus all -p 8000:8000 \
   -e MODEL_IDLE_TIMEOUT_SECONDS=300 \
   -e VIBEVOICE_MODEL_ID=microsoft/VibeVoice-realtime-0.5B \
-  -e VIBEVOICE_PIPELINE=vibevoice.pipeline:VibeVoicePipeline \
+  -e VIBEVOICE_PIPELINE=app.vibevoice_pipeline:VibeVoiceStreamingPipeline \
   vvserver:latest
 ```
 
@@ -66,7 +66,7 @@ response.stream_to_file("output.wav")
 | `VIBEVOICE_MODEL_ID` | Hugging Face model ID | `microsoft/VibeVoice-realtime-0.5B` |
 | `VIBEVOICE_DEVICE` | Device passed to pipeline | `cuda` |
 | `VIBEVOICE_DTYPE` | Torch dtype passed to pipeline | `float16` |
-| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`) | `vibevoice.pipeline:VibeVoicePipeline` |
+| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`) | `app.vibevoice_pipeline:VibeVoiceStreamingPipeline` |
 | `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
 | `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |
