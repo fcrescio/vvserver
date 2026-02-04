@@ -17,7 +17,7 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt
-RUN python3 -m pip install --no-cache-dir --upgrade pip
+RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
 
 RUN python3 -m pip install --no-cache-dir torch==2.4.0
 
