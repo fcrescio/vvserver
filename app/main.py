@@ -30,7 +30,22 @@ class TTSRequest(BaseModel):
 
 
 async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
+    """Load the model, synthesize audio in a worker thread, and normalize outputs."""
     loaded = await model_manager.load()
+    _log_request(payload)
+
+    # Run inference off the main event loop to avoid blocking.
+    result = await run_in_threadpool(_run_inference, loaded, payload)
+    audio, sample_rate = _extract_audio_and_sample_rate(result, loaded)
+
+    if audio is None:
+        raise HTTPException(status_code=500, detail="Model returned empty audio")
+
+    return np.asarray(audio), sample_rate
+
+
+def _log_request(payload: TTSRequest) -> None:
+    """Log structured request metadata for diagnostics."""
     logger.info(
         "Synthesizing audio for request: input_length=%s voice=%s speed=%s format=%s stream=%s",
         len(payload.input),
@@ -41,14 +56,17 @@ async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
     )
     logger.debug("Request input preview: %r", payload.input[:200])
 
-    def _infer() -> Any:
-        pipeline = loaded.pipeline
-        if hasattr(pipeline, "infer"):
-            return pipeline.infer(text=payload.input, voice=payload.voice, speed=payload.speed)
-        return pipeline(payload.input, voice=payload.voice, speed=payload.speed)
 
-    result = await run_in_threadpool(_infer)
+def _run_inference(loaded: Any, payload: TTSRequest) -> Any:
+    """Call the underlying pipeline using the supported interface."""
+    pipeline = loaded.pipeline
+    if hasattr(pipeline, "infer"):
+        return pipeline.infer(text=payload.input, voice=payload.voice, speed=payload.speed)
+    return pipeline(payload.input, voice=payload.voice, speed=payload.speed)
 
+
+def _extract_audio_and_sample_rate(result: Any, loaded: Any) -> tuple[Any, int]:
+    """Normalize the inference output to an (audio, sample_rate) tuple."""
     if isinstance(result, tuple) and len(result) >= 2:
         audio, sample_rate = result[0], int(result[1])
     elif isinstance(result, dict):
@@ -58,10 +76,7 @@ async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
         audio = result
         sample_rate = int(loaded.sample_rate or 24000)
 
-    if audio is None:
-        raise HTTPException(status_code=500, detail="Model returned empty audio")
-
-    return np.asarray(audio), sample_rate
+    return audio, sample_rate
 
 
 @app.on_event("startup")
@@ -90,17 +105,14 @@ async def health() -> dict[str, str]:
 
 
 def _media_type(response_format: str) -> str:
+    """Map response formats to HTTP media types."""
     fmt = response_format.lower()
-    if fmt == "wav":
-        return "audio/wav"
-    if fmt == "flac":
-        return "audio/flac"
-    if fmt == "pcm":
-        return "application/octet-stream"
-    if fmt == "mp3":
-        return "audio/mpeg"
-    if fmt == "aac":
-        return "audio/aac"
-    if fmt == "opus":
-        return "audio/ogg"
-    return "application/octet-stream"
+    media_types = {
+        "wav": "audio/wav",
+        "flac": "audio/flac",
+        "pcm": "application/octet-stream",
+        "mp3": "audio/mpeg",
+        "aac": "audio/aac",
+        "opus": "audio/ogg",
+    }
+    return media_types.get(fmt, "application/octet-stream")

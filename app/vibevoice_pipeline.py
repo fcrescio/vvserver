@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def _resolve_dtype(dtype: str | torch.dtype) -> torch.dtype:
+    """Normalize user-provided dtype strings into torch dtypes."""
     if isinstance(dtype, torch.dtype):
         return dtype
     normalized = str(dtype).lower()
@@ -40,6 +41,7 @@ class VibeVoiceStreamingPipeline:
     _voice_cache: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        """Reset cached voices after dataclass initialization."""
         self._voice_cache = {}
 
     @classmethod
@@ -50,6 +52,7 @@ class VibeVoiceStreamingPipeline:
         dtype: str | torch.dtype = "float16",
         inference_steps: int = 5,
     ) -> "VibeVoiceStreamingPipeline":
+        """Build a streaming pipeline with model, processor, and voice presets loaded."""
         device_obj = torch.device(device)
         torch_dtype, device_map, attn_impl = cls._resolve_loading_config(
             device=device_obj, dtype=dtype
@@ -91,6 +94,7 @@ class VibeVoiceStreamingPipeline:
         device: torch.device,
         dtype: str | torch.dtype,
     ) -> tuple[torch.dtype, str | None, str]:
+        """Pick dtype, device map, and attention implementation for the device."""
         attn_override = os.getenv("VIBEVOICE_ATTN_IMPLEMENTATION")
         if str(device).startswith("mps"):
             torch_dtype = torch.float32
@@ -116,6 +120,7 @@ class VibeVoiceStreamingPipeline:
         device_map: str | None,
         attn_impl: str,
     ) -> VibeVoiceStreamingForConditionalGenerationInference:
+        """Load the model and handle attention fallback when needed."""
         logger.info(
             "Loading VibeVoice model device=%s dtype=%s attn=%s",
             device_map or device,
@@ -152,6 +157,7 @@ class VibeVoiceStreamingPipeline:
     def _configure_noise_scheduler(
         model: VibeVoiceStreamingForConditionalGenerationInference,
     ) -> None:
+        """Swap in a tuned noise scheduler when the model exposes one."""
         if not hasattr(model, "model"):
             return
         scheduler = getattr(model.model, "noise_scheduler", None)
@@ -165,6 +171,7 @@ class VibeVoiceStreamingPipeline:
 
     @staticmethod
     def _load_voice_presets() -> dict[str, Path]:
+        """Load voice preset metadata from the bundled voices directory."""
         voices_dir = Path(__file__).resolve().parent.parent / "voices" / "streaming_model"
         if not voices_dir.exists():
             raise RuntimeError(f"Voices directory not found: {voices_dir}")
@@ -183,6 +190,7 @@ class VibeVoiceStreamingPipeline:
     def _determine_voice_key(
         voice_presets: dict[str, Path], requested: str | None
     ) -> str:
+        """Select the requested voice key or fall back to a default."""
         if requested and requested in voice_presets:
             return requested
         default_key = "en-Carter_man"
@@ -191,6 +199,7 @@ class VibeVoiceStreamingPipeline:
         return next(iter(voice_presets))
 
     def _ensure_voice_cached(self, key: str) -> Any:
+        """Load the voice preset into memory if it is not cached."""
         if key not in self.voice_presets:
             raise RuntimeError(f"Voice preset {key!r} not found")
         if key in self._voice_cache:
@@ -207,11 +216,13 @@ class VibeVoiceStreamingPipeline:
         return prefilled_outputs
 
     def _get_voice_resources(self, voice: str) -> tuple[str, Any]:
+        """Resolve the requested voice to a cached preset and return it."""
         key = voice if voice in self.voice_presets else self.default_voice_key
         prefilled_outputs = self._ensure_voice_cached(key)
         return key, prefilled_outputs
 
     def _prepare_inputs(self, text: str, prefilled_outputs: Any) -> dict[str, Any]:
+        """Run the processor and move tensors to the configured device."""
         processed = self.processor.process_input_with_cached_prompt(
             text=text.strip(),
             cached_prompt=prefilled_outputs,
@@ -231,6 +242,7 @@ class VibeVoiceStreamingPipeline:
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor,
     ) -> Any:
+        """Prime the LM cache for streaming generation."""
         _, model_kwargs, prepared_ids = model._build_generate_config_model_kwargs(
             None,
             None,
@@ -257,6 +269,7 @@ class VibeVoiceStreamingPipeline:
         lm_last_hidden_state: torch.Tensor,
         text_mask_value: int,
     ) -> Any:
+        """Prime the TTS LM cache using the text masked tokens."""
         _, model_kwargs, prepared_ids = model._build_generate_config_model_kwargs(
             None,
             None,
@@ -278,21 +291,43 @@ class VibeVoiceStreamingPipeline:
         )
 
     def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
+        """Generate speech audio for the given text."""
         del speed
-        logger.info("VibeVoice infer received text_length=%s", len(text))
-        logger.debug("VibeVoice infer text preview: %r", text[:200])
+        self._log_infer_request(text)
         script = self._format_script(text)
-        logger.info("VibeVoice formatted script_length=%s", len(script))
-        logger.debug("VibeVoice formatted script preview: %r", script[:200])
+        self._log_formatted_script(script)
+
         _, prefilled_outputs = self._get_voice_resources(voice)
         tensor_inputs = self._prepare_inputs(script, prefilled_outputs)
+        self._log_input_ids_shape(tensor_inputs)
+
+        outputs = self._generate_speech(tensor_inputs, prefilled_outputs)
+        audio = self._extract_audio(outputs)
+        return audio, self.sample_rate
+
+    def _log_infer_request(self, text: str) -> None:
+        """Log high-level inference details for diagnostics."""
+        logger.info("VibeVoice infer received text_length=%s", len(text))
+        logger.debug("VibeVoice infer text preview: %r", text[:200])
+
+    def _log_formatted_script(self, script: str) -> None:
+        """Log the post-processed script details."""
+        logger.info("VibeVoice formatted script_length=%s", len(script))
+        logger.debug("VibeVoice formatted script preview: %r", script[:200])
+
+    @staticmethod
+    def _log_input_ids_shape(tensor_inputs: dict[str, Any]) -> None:
+        """Log input tensor shapes if available."""
         input_ids = tensor_inputs.get("input_ids")
         if isinstance(input_ids, torch.Tensor):
             logger.info("VibeVoice input_ids shape=%s", tuple(input_ids.shape))
 
+    def _generate_speech(
+        self, tensor_inputs: dict[str, Any], prefilled_outputs: Any
+    ) -> Any:
+        """Invoke the model to generate speech outputs."""
         self.model.set_ddpm_inference_steps(num_steps=self.inference_steps)
-
-        outputs = self.model.generate(
+        return self.model.generate(
             input_ids=tensor_inputs["input_ids"],
             attention_mask=tensor_inputs["attention_mask"],
             tts_lm_input_ids=tensor_inputs["tts_lm_input_ids"],
@@ -305,17 +340,20 @@ class VibeVoiceStreamingPipeline:
             show_progress_bar=False,
         )
 
+    @staticmethod
+    def _extract_audio(outputs: Any) -> Any:
+        """Extract and normalize the first speech output."""
         if not outputs.speech_outputs:
             raise RuntimeError("Model returned empty audio output")
 
         audio = outputs.speech_outputs[0]
         if isinstance(audio, torch.Tensor):
             audio = audio.detach().to(torch.float32).cpu().numpy()
-
-        return audio, self.sample_rate
+        return audio
 
     @staticmethod
     def _format_script(text: str) -> str:
+        """Ensure text is formatted with a speaker prefix."""
         stripped = text.strip()
         if re.match(r"^Speaker\s+\d+\s*:", stripped, re.IGNORECASE):
             return stripped
