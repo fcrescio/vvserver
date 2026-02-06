@@ -335,6 +335,12 @@ class VibeVoiceStreamingPipeline:
             tts_text_ids=tensor_inputs["tts_text_ids"],
             all_prefilled_outputs=copy.deepcopy(prefilled_outputs),
             tokenizer=self.processor.tokenizer,
+            generation_config={
+                    "do_sample": False,
+                    "temperature": 1.0,
+                    "top_p": 1.0,
+                },
+            refresh_negative=True,
             cfg_scale=1.0,
             return_speech=True,
             show_progress_bar=False,
