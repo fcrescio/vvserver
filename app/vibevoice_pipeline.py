@@ -341,7 +341,7 @@ class VibeVoiceStreamingPipeline:
                     "top_p": 1.0,
                 },
             refresh_negative=True,
-            cfg_scale=1.0,
+            cfg_scale=1.5,
             return_speech=True,
             show_progress_bar=False,
         )
@@ -360,7 +360,5 @@ class VibeVoiceStreamingPipeline:
     @staticmethod
     def _format_script(text: str) -> str:
         """Ensure text is formatted with a speaker prefix."""
-        stripped = text.strip()
-        if re.match(r"^Speaker\s+\d+\s*:", stripped, re.IGNORECASE):
-            return stripped
-        return f"Speaker 0: {stripped}"
+        stripped = text.replace("’","'").strip()
+        return stripped
