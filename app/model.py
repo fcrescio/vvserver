@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import gc
 import importlib
 import logging
 import time
@@ -55,9 +56,10 @@ class ModelManager:
                 return False
 
             logger.info("Unloading VibeVoice pipeline after idle timeout")
+            pipeline = self._loaded.pipeline
             self._loaded = None
             self._last_used = None
-            torch.cuda.empty_cache()
+            _release_pipeline(pipeline)
             return True
 
     async def idle_watchdog(self) -> None:
@@ -87,6 +89,22 @@ def _create_pipeline(pipeline_cls: Any) -> Any:
         dtype=settings.dtype,
         inference_steps=settings.inference_steps,
     )
+
+
+def _release_pipeline(pipeline: Any) -> None:
+    """Release pipeline resources to free CPU/GPU memory."""
+    try:
+        if hasattr(pipeline, "to"):
+            pipeline.to("cpu")
+    except Exception:
+        logger.exception("Failed moving pipeline to CPU during unload")
+    del pipeline
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+    if hasattr(torch, "mps") and torch.backends.mps.is_available():
+        torch.mps.empty_cache()
 
 
 model_manager = ModelManager()
