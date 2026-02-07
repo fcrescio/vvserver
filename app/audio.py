@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import Iterable
+from typing import Iterable, Tuple
 
 import numpy as np
 import soundfile as sf
@@ -41,6 +41,16 @@ def encode_audio(
         return _encode_compressed(buffer, audio_data, sample_rate, fmt)
 
     raise HTTPException(status_code=400, detail=f"Unsupported response_format '{fmt}'")
+
+
+def decode_audio_bytes(data: bytes) -> Tuple[np.ndarray, int]:
+    """Decode audio bytes into a mono float32 numpy array and sample rate."""
+    try:
+        audio, sample_rate = sf.read(io.BytesIO(data), dtype="float32", always_2d=False)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Failed to decode audio file") from exc
+
+    return _to_numpy(audio), int(sample_rate)
 
 
 def _encode_soundfile(

@@ -29,6 +29,26 @@ class Settings:
         "VIBEVOICE_PIPELINE",
         "app.vibevoice_pipeline:VibeVoiceStreamingPipeline",
     )
+    asr_model_id: str = os.getenv(
+        "VIBEVOICE_ASR_MODEL_ID",
+        os.getenv("VIBEVOICE_MODEL_ID", "microsoft/VibeVoice-ASR"),
+    )
+    asr_device: str = os.getenv(
+        "VIBEVOICE_ASR_DEVICE",
+        os.getenv("VIBEVOICE_DEVICE", "cuda"),
+    )
+    asr_dtype: str = os.getenv(
+        "VIBEVOICE_ASR_DTYPE",
+        os.getenv("VIBEVOICE_DTYPE", "float16"),
+    )
+    asr_attn_implementation: str = os.getenv(
+        "VIBEVOICE_ASR_ATTN_IMPLEMENTATION",
+        "sdpa",
+    )
+    asr_pipeline_import: str = os.getenv(
+        "VIBEVOICE_ASR_PIPELINE",
+        "app.asr_pipeline:VibeVoiceASRBatchInference",
+    )
     log_level: int = _resolve_log_level(os.getenv("LOG_LEVEL", "INFO"))
 
 

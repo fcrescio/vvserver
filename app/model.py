@@ -72,6 +72,58 @@ class ModelManager:
                 logger.exception("Failed during idle unload check")
 
 
+@dataclass
+class LoadedASRModel:
+    pipeline: Any
+
+
+class ASRModelManager:
+    def __init__(self) -> None:
+        self._lock = asyncio.Lock()
+        self._loaded: LoadedASRModel | None = None
+        self._last_used: float | None = None
+
+    async def load(self) -> LoadedASRModel:
+        """Load the ASR pipeline if not already loaded."""
+        async with self._lock:
+            if self._loaded is not None:
+                self._touch()
+                return self._loaded
+
+            logger.info("Loading VibeVoice ASR pipeline")
+            pipeline_cls = _resolve_pipeline_class(settings.asr_pipeline_import)
+            pipeline = _create_asr_pipeline(pipeline_cls)
+            self._loaded = LoadedASRModel(pipeline=pipeline)
+            self._touch()
+            return self._loaded
+
+    def _touch(self) -> None:
+        self._last_used = time.monotonic()
+
+    async def unload_if_idle(self) -> bool:
+        async with self._lock:
+            if self._loaded is None or self._last_used is None:
+                return False
+            idle_for = time.monotonic() - self._last_used
+            if idle_for < settings.model_idle_timeout_seconds:
+                return False
+
+            logger.info("Unloading VibeVoice ASR pipeline after idle timeout")
+            pipeline = self._loaded.pipeline
+            self._loaded = None
+            self._last_used = None
+            _release_pipeline(pipeline)
+            return True
+
+    async def idle_watchdog(self) -> None:
+        while True:
+            await asyncio.sleep(settings.idle_check_interval_seconds)
+            try:
+                await self.unload_if_idle()
+            except Exception:  # pragma: no cover - defensive logging
+                logger.exception("Failed during ASR idle unload check")
+
+
 def _resolve_pipeline_class(pipeline_import: str) -> Any:
     """Import the pipeline class from a module path string."""
     module_name, _, attr_name = pipeline_import.partition(":")
@@ -88,6 +140,16 @@ def _create_pipeline(pipeline_cls: Any) -> Any:
         device=settings.device,
         dtype=settings.dtype,
         inference_steps=settings.inference_steps,
+    )
+
+
+def _create_asr_pipeline(pipeline_cls: Any) -> Any:
+    """Instantiate the ASR pipeline using configured settings."""
+    return pipeline_cls.from_pretrained(
+        settings.asr_model_id,
+        device=settings.asr_device,
+        dtype=settings.asr_dtype,
+        attn_implementation=settings.asr_attn_implementation,
     )
 
 
@@ -108,3 +170,4 @@ def _release_pipeline(pipeline: Any) -> None:
 
 
 model_manager = ModelManager()
+asr_model_manager = ASRModelManager()
