@@ -67,16 +67,33 @@ def _run_inference(loaded: Any, payload: TTSRequest) -> Any:
 
 def _extract_audio_and_sample_rate(result: Any, loaded: Any) -> tuple[Any, int]:
     """Normalize the inference output to an (audio, sample_rate) tuple."""
+    sample_rate = _normalize_sample_rate(getattr(loaded, "sample_rate", None), 24000)
+
     if isinstance(result, tuple) and len(result) >= 2:
-        audio, sample_rate = result[0], int(result[1])
+        audio = result[0]
+        sample_rate = _normalize_sample_rate(result[1], sample_rate)
     elif isinstance(result, dict):
         audio = result.get("audio")
-        sample_rate = int(result.get("sample_rate", loaded.sample_rate or 24000))
+        sample_rate = _normalize_sample_rate(result.get("sample_rate"), sample_rate)
     else:
         audio = result
-        sample_rate = int(loaded.sample_rate or 24000)
 
     return audio, sample_rate
+
+
+def _normalize_sample_rate(value: Any, default: int) -> int:
+    """Coerce sample rate values from model outputs into a valid integer."""
+    if value is None:
+        return default
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        logger.warning("Unexpected sample rate value %r; falling back to %s", value, default)
+        return default
+    if parsed <= 0:
+        logger.warning("Non-positive sample rate %r; falling back to %s", parsed, default)
+        return default
+    return parsed
 
 
 @app.on_event("startup")
