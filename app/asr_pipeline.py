@@ -46,7 +46,7 @@ class VibeVoiceASRBatchInference:
         processor = VibeVoiceASRProcessor.from_pretrained(
             model_id,
             quantization_config=bnb_config,
-            language_model_pretrained_name="Qwen/Qwen2.5-7B",
+            language_model_pretrained_name="Qwen/Qwen2.5-0.5B",
         )
         logger.info("Using attention implementation: %s", attn_implementation)
         
