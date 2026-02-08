@@ -17,8 +17,21 @@ def _to_numpy(audio: np.ndarray | list[float]) -> np.ndarray:
     if array.ndim == 1:
         return array
     if array.ndim == 2:
-        return array.mean(axis=0)
+        return _mixdown_to_mono(array)
     raise ValueError("Audio output must be 1D or 2D array")
+
+
+def _mixdown_to_mono(array: np.ndarray) -> np.ndarray:
+    """Mix multi-channel audio down to mono, preserving the time axis."""
+    channels_first = array.shape[0] <= 2 and array.shape[1] > array.shape[0]
+    channels_last = array.shape[1] <= 2 and array.shape[0] > array.shape[1]
+
+    if channels_first and not channels_last:
+        return array.mean(axis=0)
+    if channels_last and not channels_first:
+        return array.mean(axis=1)
+
+    return array.mean(axis=-1)
 
 
 def encode_audio(
