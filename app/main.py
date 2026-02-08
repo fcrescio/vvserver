@@ -220,8 +220,8 @@ def _normalize_segments(
             normalized.append(
                 {
                     "id": segment.get("id", index),
-                    "start": float(segment.get("start", 0.0)),
-                    "end": float(segment.get("end", 0.0)),
+                    "start": _coerce_float(segment.get("start"), 0.0),
+                    "end": _coerce_float(segment.get("end"), 0.0),
                     "text": text,
                 }
             )
@@ -229,8 +229,8 @@ def _normalize_segments(
             normalized.append(
                 {
                     "id": index,
-                    "start": float(segment[0]),
-                    "end": float(segment[1]),
+                    "start": _coerce_float(segment[0], 0.0),
+                    "end": _coerce_float(segment[1], 0.0),
                     "text": str(segment[2]),
                 }
             )
@@ -245,6 +245,13 @@ def _normalize_segments(
             )
 
     return normalized
+
+
+def _coerce_float(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _format_timestamp(seconds: float, ms_separator: str) -> str:
