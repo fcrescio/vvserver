@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+import numpy as np
 import torch
 from vibevoice.modular import VibeVoiceASRForConditionalGeneration
 from vibevoice.processor import VibeVoiceASRProcessor
@@ -94,6 +95,44 @@ class VibeVoiceASRBatchInference:
                 config["top_p"] = top_p
         return config
 
+    @staticmethod
+    def _to_mono(waveform: np.ndarray) -> np.ndarray:
+        wf = np.asarray(waveform, dtype=np.float32)
+        if wf.ndim == 2:
+            if wf.shape[0] == 2 and wf.shape[1] > 2:
+                wf = wf.mean(axis=0)
+            else:
+                wf = wf.mean(axis=1)
+        return wf
+
+    @classmethod
+    def _normalize_audio_item(cls, item: Any) -> Any:
+        if isinstance(item, str):
+            return item
+
+        if isinstance(item, dict) and "path" in item and "array" not in item:
+            return item
+
+        if (
+            isinstance(item, (tuple, list))
+            and len(item) == 2
+            and isinstance(item[1], (int, float))
+        ):
+            waveform, sr = item
+            waveform = cls._to_mono(waveform)
+            return {"array": waveform, "sampling_rate": int(sr)}
+
+        if isinstance(item, dict) and "array" in item:
+            arr = cls._to_mono(item["array"])
+            out = dict(item)
+            out["array"] = arr
+            if out.get("sampling_rate") is not None:
+                out["sampling_rate"] = int(out["sampling_rate"])
+            return out
+
+        arr = cls._to_mono(item)
+        return {"array": arr, "sampling_rate": None}
+
     def transcribe_batch(
         self,
         audio_inputs: list[Any],
@@ -107,9 +146,30 @@ class VibeVoiceASRBatchInference:
         if not audio_inputs:
             return []
 
+        normalized_inputs = [
+            self._normalize_audio_item(item) for item in audio_inputs
+        ]
+        audio_payload: list[Any] = []
+        sampling_rates: set[int] = set()
+        for item in normalized_inputs:
+            if isinstance(item, dict) and "array" in item:
+                audio_payload.append(item["array"])
+                if item.get("sampling_rate") is not None:
+                    sampling_rates.add(int(item["sampling_rate"]))
+            else:
+                audio_payload.append(item)
+
+        sampling_rate = None
+        if len(sampling_rates) == 1:
+            sampling_rate = sampling_rates.pop()
+        elif len(sampling_rates) > 1:
+            logger.warning(
+                "Detected multiple sampling rates in a batch; using processor default."
+            )
+
         inputs = self.processor(
-            audio=audio_inputs,
-            sampling_rate=None,
+            audio=audio_payload,
+            sampling_rate=sampling_rate,
             return_tensors="pt",
             padding=True,
             add_generation_prompt=True,
