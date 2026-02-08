@@ -155,11 +155,21 @@ def _create_asr_pipeline(pipeline_cls: Any) -> Any:
 
 def _release_pipeline(pipeline: Any) -> None:
     """Release pipeline resources to free CPU/GPU memory."""
+    model = getattr(pipeline, "model", None)
     try:
         if hasattr(pipeline, "to"):
             pipeline.to("cpu")
+        if model is not None and hasattr(model, "to"):
+            model.to("cpu")
     except Exception:
         logger.exception("Failed moving pipeline to CPU during unload")
+    try:
+        if model is not None:
+            setattr(pipeline, "model", None)
+        if hasattr(pipeline, "processor"):
+            setattr(pipeline, "processor", None)
+    except Exception:
+        logger.exception("Failed clearing pipeline references during unload")
     del pipeline
     gc.collect()
     if torch.cuda.is_available():
