@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
-from vibevoice import VibeVoiceASRForConditionalGeneration
+from vibevoice.modular import VibeVoiceASRForConditionalGeneration
 from vibevoice.processor import VibeVoiceASRProcessor
 
 logger = logging.getLogger(__name__)
