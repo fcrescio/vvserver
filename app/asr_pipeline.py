@@ -71,7 +71,7 @@ class VibeVoiceASRBatchInference:
 
     @staticmethod
     def _prepare_generation_config(
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 8192,
         temperature: float = 0.0,
         top_p: float = 0.9,
         do_sample: bool = True,
@@ -136,7 +136,7 @@ class VibeVoiceASRBatchInference:
     def transcribe_batch(
         self,
         audio_inputs: list[Any],
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 8192,
         temperature: float = 0.0,
         top_p: float = 1.0,
         do_sample: bool = True,
@@ -243,7 +243,7 @@ class VibeVoiceASRBatchInference:
         self,
         audio_inputs: list[Any],
         batch_size: int = 4,
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 8129,
         temperature: float = 0.0,
         top_p: float = 1.0,
         do_sample: bool = True,
