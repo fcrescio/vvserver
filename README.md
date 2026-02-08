@@ -23,6 +23,8 @@ docker run --gpus all -p 8000:8000 \
   -e MODEL_IDLE_TIMEOUT_SECONDS=300 \
   -e VIBEVOICE_MODEL_ID=microsoft/VibeVoice-realtime-0.5B \
   -e VIBEVOICE_PIPELINE=app.vibevoice_pipeline:VibeVoiceStreamingPipeline \
+  -e HF_HOME=/data/huggingface \
+  -v $(pwd)/hf-cache:/data/huggingface \
   vvserver:latest
 ```
 
@@ -72,7 +74,9 @@ response.stream_to_file("output.wav")
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
 | `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |
 | `LOG_LEVEL` | Python log level (`DEBUG`, `INFO`, etc.) | `INFO` |
+| `HF_HOME` | Hugging Face cache directory (bind mount for persistence) | `/data/huggingface` |
 
 ## Notes
 - `mp3`, `aac`, and `opus` responses require ffmpeg (installed in the Docker image) and `pydub`.
 - The server uses a conservative fallback for the VibeVoice pipeline output. If your pipeline uses a different API, update `app/main.py` accordingly.
+- Bind-mount the `HF_HOME` directory if you want to persist model downloads across container restarts.

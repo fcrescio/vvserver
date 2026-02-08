@@ -16,6 +16,10 @@ RUN apt-get update \
 
 WORKDIR /app
 
+ENV HF_HOME=/data/huggingface
+
+RUN mkdir -p ${HF_HOME}
+
 COPY requirements.txt /app/requirements.txt
 RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
 
