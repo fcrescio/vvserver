@@ -28,33 +28,6 @@ RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
 
-RUN set -eux; \
-    git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/VibeVoice.git /tmp/VibeVoice; \
-    cd /tmp/VibeVoice; \
-    git sparse-checkout set demo/voices/streaming_model; \
-    mkdir -p /app/voices; \
-    cp -r /tmp/VibeVoice/demo/voices/streaming_model /app/voices/; \
-    rm -rf /tmp/VibeVoice; \
-    curl -L -o /tmp/experimental_voices_de.tar.gz https://github.com/user-attachments/files/24035887/experimental_voices_de.tar.gz; \
-    curl -L -o /tmp/experimental_voices_fr.tar.gz https://github.com/user-attachments/files/24035880/experimental_voices_fr.tar.gz; \
-    curl -L -o /tmp/experimental_voices_jp.tar.gz https://github.com/user-attachments/files/24035882/experimental_voices_jp.tar.gz; \
-    curl -L -o /tmp/experimental_voices_kr.tar.gz https://github.com/user-attachments/files/24035883/experimental_voices_kr.tar.gz; \
-    curl -L -o /tmp/experimental_voices_pl.tar.gz https://github.com/user-attachments/files/24035885/experimental_voices_pl.tar.gz; \
-    curl -L -o /tmp/experimental_voices_pt.tar.gz https://github.com/user-attachments/files/24035886/experimental_voices_pt.tar.gz; \
-    curl -L -o /tmp/experimental_voices_sp.tar.gz https://github.com/user-attachments/files/24035884/experimental_voices_sp.tar.gz; \
-    curl -L -o /tmp/experimental_voices_en1.tar.gz https://github.com/user-attachments/files/24189272/experimental_voices_en1.tar.gz; \
-    curl -L -o /tmp/experimental_voices_en2.tar.gz https://github.com/user-attachments/files/24189273/experimental_voices_en2.tar.gz; \
-    tar -xzf /tmp/experimental_voices_de.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_fr.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_jp.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_kr.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_pl.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_pt.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_sp.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_en1.tar.gz -C /app/voices/streaming_model; \
-    tar -xzf /tmp/experimental_voices_en2.tar.gz -C /app/voices/streaming_model; \
-    rm -f /tmp/experimental_voices_*.tar.gz
-
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
