@@ -24,6 +24,7 @@ class VibeVoiceASRBatchInference:
     device: torch.device
     dtype: torch.dtype
     attn_implementation: str
+    profile_cuda_memory: bool = False
 
     @classmethod
     def from_pretrained(
@@ -32,6 +33,7 @@ class VibeVoiceASRBatchInference:
         device: str = "cuda",
         dtype: str | torch.dtype = torch.bfloat16,
         attn_implementation: str = "sdpa",
+        profile_cuda_memory: bool = False,
     ) -> "VibeVoiceASRBatchInference":
         """Initialize the ASR batch inference pipeline."""
         logger.info("Loading VibeVoice ASR model from %s", model_id)
@@ -80,6 +82,7 @@ class VibeVoiceASRBatchInference:
             device=resolved_device,
             dtype=resolved_dtype,
             attn_implementation=attn_implementation,
+            profile_cuda_memory=profile_cuda_memory,
         )
 
     @staticmethod
@@ -117,6 +120,37 @@ class VibeVoiceASRBatchInference:
             else:
                 wf = wf.mean(axis=1)
         return wf
+
+    def _cuda_memory_enabled(self) -> bool:
+        return (
+            self.profile_cuda_memory
+            and self.device.type == "cuda"
+            and torch.cuda.is_available()
+        )
+
+    def _cuda_memory_snapshot(self) -> dict[str, float]:
+        device = self.device
+        allocated = torch.cuda.memory_allocated(device)
+        reserved = torch.cuda.memory_reserved(device)
+        peak_allocated = torch.cuda.max_memory_allocated(device)
+        peak_reserved = torch.cuda.max_memory_reserved(device)
+        return {
+            "allocated_mb": allocated / (1024**2),
+            "reserved_mb": reserved / (1024**2),
+            "peak_allocated_mb": peak_allocated / (1024**2),
+            "peak_reserved_mb": peak_reserved / (1024**2),
+        }
+
+    def _log_cuda_memory(self, label: str) -> None:
+        snapshot = self._cuda_memory_snapshot()
+        logger.info(
+            "CUDA memory %s: allocated=%.2fMB reserved=%.2fMB peak_allocated=%.2fMB peak_reserved=%.2fMB",
+            label,
+            snapshot["allocated_mb"],
+            snapshot["reserved_mb"],
+            snapshot["peak_allocated_mb"],
+            snapshot["peak_reserved_mb"],
+        )
 
     @classmethod
     def _normalize_audio_item(cls, item: Any) -> Any:
@@ -203,10 +237,15 @@ class VibeVoiceASRBatchInference:
             eos_token_id=self.processor.tokenizer.eos_token_id,
         )
 
+        if self._cuda_memory_enabled():
+            torch.cuda.reset_peak_memory_stats(self.device)
+            self._log_cuda_memory("before generation")
         start_time = time.time()
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, **generation_config)
         generation_time = time.time() - start_time
+        if self._cuda_memory_enabled():
+            self._log_cuda_memory("after generation")
 
         results: list[dict[str, Any]] = []
         input_length = inputs["input_ids"].shape[1]

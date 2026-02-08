@@ -12,6 +12,10 @@ def _resolve_log_level(value: str) -> int:
     return logging.INFO
 
 
+def _resolve_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on", "y", "t"}
+
+
 @dataclass(frozen=True)
 class Settings:
     model_id: str = os.getenv("VIBEVOICE_MODEL_ID", "microsoft/VibeVoice-realtime-0.5B")
@@ -48,6 +52,9 @@ class Settings:
     asr_pipeline_import: str = os.getenv(
         "VIBEVOICE_ASR_PIPELINE",
         "app.asr_pipeline:VibeVoiceASRBatchInference",
+    )
+    asr_profile_cuda_memory: bool = _resolve_bool(
+        os.getenv("VIBEVOICE_ASR_PROFILE_CUDA_MEMORY", "false")
     )
     log_level: int = _resolve_log_level(os.getenv("LOG_LEVEL", "INFO"))
 

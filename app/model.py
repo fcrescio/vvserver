@@ -150,6 +150,7 @@ def _create_asr_pipeline(pipeline_cls: Any) -> Any:
         device=settings.asr_device,
         dtype=settings.asr_dtype,
         attn_implementation=settings.asr_attn_implementation,
+        profile_cuda_memory=settings.asr_profile_cuda_memory,
     )
 
 
