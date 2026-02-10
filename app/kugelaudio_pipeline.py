@@ -82,13 +82,14 @@ class KugelAudioPipeline:
     def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
         """Generate speech audio for the given text."""
         del speed
-        selected_voice = self._resolve_voice(voice)
+        #selected_voice = self._resolve_voice(voice)
         logger.info(
             "KugelAudio infer received text_length=%s voice=%s", len(text), selected_voice
         )
         inputs = self.processor(
             text=text.strip(),
-            voice=selected_voice,
+            #voice=selected_voice,
+            voice_prompt="/data/huggingface/test.mp3",
             return_tensors="pt",
         )
         inputs = {
