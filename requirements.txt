@@ -6,4 +6,4 @@ soundfile==0.12.1
 bitsandbytes==0.49.1
 vibevoice @ git+https://github.com/fcrescio/VibeVoice.git
 pydub==0.25.1
-kugelaudio-open @ git+https://github.com/Kugelaudio/kugelaudio-open.git
+kugelaudio-open @ git+https://github.com/fcrescio/kugelaudio-open.git
