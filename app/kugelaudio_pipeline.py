@@ -98,7 +98,7 @@ class KugelAudioPipeline:
             for key, value in inputs.items()
         }
         with torch.no_grad():
-            outputs = self.model.generate(**inputs, cfg_scale=self.cfg_scale)
+            outputs = self.model.generate(**inputs, do_sample=True, cfg_scale=self.cfg_scale)
         audio = self._extract_audio(outputs)
         return audio, self.sample_rate
 
