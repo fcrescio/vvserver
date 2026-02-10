@@ -84,7 +84,8 @@ class KugelAudioPipeline:
         del speed
         #selected_voice = self._resolve_voice(voice)
         logger.info(
-            "KugelAudio infer received text_length=%s voice=%s", len(text), selected_voice
+#            "KugelAudio infer received text_length=%s voice=%s", len(text), selected_voice
+            "KugelAudio infer received text_length=%s", len(text)
         )
         inputs = self.processor(
             text=text.strip(),
