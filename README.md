@@ -69,7 +69,8 @@ response.stream_to_file("output.wav")
 | `VIBEVOICE_DEVICE` | Device passed to pipeline | `cuda` |
 | `VIBEVOICE_DTYPE` | Torch dtype passed to pipeline | `float16` |
 | `VIBEVOICE_ATTN_IMPLEMENTATION` | Attention implementation (`flash_attention_2`, `sdpa`, `eager`) | (auto) |
-| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`) | `app.vibevoice_streaming_pipeline:VibeVoiceStreamingPipeline` |
+| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`); auto-selects streaming/full/KugelAudio when unset | `(auto from VIBEVOICE_MODEL_ID)` |
+| `VIBEVOICE_VOICE_SAMPLE` | Default reference voice audio path for full VibeVoice models | `/data/huggingface/test.mp3` |
 | `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
 | `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |
