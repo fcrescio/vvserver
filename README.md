@@ -16,13 +16,13 @@ docker build -t vvserver:latest .
 
 # Run with GPU access
 # - MODEL_IDLE_TIMEOUT_SECONDS controls how long the model can remain idle before unloading
-# - VIBEVOICE_MODEL_ID defaults to microsoft/VibeVoice-realtime-0.5B
-# - VIBEVOICE_PIPELINE points at the pipeline import path
+# - TTS_MODEL_ID defaults to microsoft/VibeVoice-realtime-0.5B
+# - TTS_PIPELINE points at the pipeline import path
 
 docker run --gpus all -p 8000:8000 \
   -e MODEL_IDLE_TIMEOUT_SECONDS=300 \
-  -e VIBEVOICE_MODEL_ID=microsoft/VibeVoice-realtime-0.5B \
-  -e VIBEVOICE_PIPELINE=app.vibevoice_streaming_pipeline:VibeVoiceStreamingPipeline \
+  -e TTS_MODEL_ID=microsoft/VibeVoice-realtime-0.5B \
+  -e TTS_PIPELINE=app.vibevoice_streaming_pipeline:VibeVoiceStreamingPipeline \
   -e HF_HOME=/data/huggingface \
   -v $(pwd)/hf-cache:/data/huggingface \
   vvserver:latest
@@ -65,12 +65,12 @@ response.stream_to_file("output.wav")
 
 | Env var | Description | Default |
 | --- | --- | --- |
-| `VIBEVOICE_MODEL_ID` | Hugging Face model ID | `microsoft/VibeVoice-realtime-0.5B` |
-| `VIBEVOICE_DEVICE` | Device passed to pipeline | `cuda` |
-| `VIBEVOICE_DTYPE` | Torch dtype passed to pipeline | `float16` |
-| `VIBEVOICE_ATTN_IMPLEMENTATION` | Attention implementation (`flash_attention_2`, `sdpa`, `eager`) | (auto) |
-| `VIBEVOICE_PIPELINE` | Pipeline import path (`module:ClassName`); auto-selects streaming/full/KugelAudio when unset | `(auto from VIBEVOICE_MODEL_ID)` |
-| `VIBEVOICE_VOICE_SAMPLE` | Default reference voice audio path for full VibeVoice models | `/data/huggingface/test.mp3` |
+| `TTS_MODEL_ID` | Hugging Face model ID | `microsoft/VibeVoice-realtime-0.5B` |
+| `TTS_DEVICE` | Device passed to pipeline | `cuda` |
+| `TTS_DTYPE` | Torch dtype passed to pipeline | `float16` |
+| `TTS_ATTN_IMPLEMENTATION` | Attention implementation (`flash_attention_2`, `sdpa`, `eager`) | (auto) |
+| `TTS_PIPELINE` | Pipeline import path (`module:ClassName`); auto-selects streaming/full/KugelAudio when unset | `(auto from TTS_MODEL_ID)` |
+| `TTS_VOICE_SAMPLE` | Default reference voice audio path for full VibeVoice models | `/data/huggingface/test.mp3` |
 | `MODEL_IDLE_TIMEOUT_SECONDS` | Idle timeout before unloading model | `300` |
 | `MODEL_IDLE_CHECK_INTERVAL_SECONDS` | Idle check interval | `30` |
 | `MAX_TEXT_LENGTH` | Maximum input text length | `1000` |

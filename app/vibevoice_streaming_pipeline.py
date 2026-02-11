@@ -95,7 +95,7 @@ class VibeVoiceStreamingPipeline:
         dtype: str | torch.dtype,
     ) -> tuple[torch.dtype, str | None, str]:
         """Pick dtype, device map, and attention implementation for the device."""
-        attn_override = os.getenv("VIBEVOICE_ATTN_IMPLEMENTATION")
+        attn_override = os.getenv("TTS_ATTN_IMPLEMENTATION")
         if str(device).startswith("mps"):
             torch_dtype = torch.float32
             device_map = None

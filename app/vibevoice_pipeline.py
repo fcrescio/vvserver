@@ -125,7 +125,7 @@ class VibeVoicePipeline:
     def _resolve_voice_sample(voice: str) -> str:
         if voice and voice != "default":
             return voice
-        return os.getenv("VIBEVOICE_VOICE_SAMPLE", "/data/huggingface/test.mp3")
+        return os.getenv("TTS_VOICE_SAMPLE", "/data/huggingface/test.mp3")
 
     @staticmethod
     def _format_script(text: str) -> str:
