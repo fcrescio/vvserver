@@ -24,7 +24,7 @@ def _default_pipeline_import(model_id: str) -> str:
     normalized = model_id.lower()
     if "kugelaudio" in normalized:
         return "app.kugelaudio_pipeline:KugelAudioPipeline"
-    return "app.vibevoice_pipeline:VibeVoiceStreamingPipeline"
+    return "app.vibevoice_streaming_pipeline:VibeVoiceStreamingPipeline"
 
 
 def _default_pipeline_import_factory() -> str:
