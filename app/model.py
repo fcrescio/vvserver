@@ -128,7 +128,7 @@ def _resolve_pipeline_class(pipeline_import: str) -> Any:
     """Import the pipeline class from a module path string."""
     module_name, _, attr_name = pipeline_import.partition(":")
     if not module_name or not attr_name:
-        raise RuntimeError("VIBEVOICE_PIPELINE must be in the format 'module:ClassName'")
+        raise RuntimeError("TTS_PIPELINE must be in the format 'module:ClassName'")
     module = importlib.import_module(module_name)
     return getattr(module, attr_name)
 
