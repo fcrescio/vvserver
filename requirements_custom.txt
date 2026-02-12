@@ -1,0 +1,2 @@
+vibevoice @ git+https://github.com/fcrescio/VibeVoice.git@bb3a13d
+kugelaudio-open @ git+https://github.com/fcrescio/kugelaudio-open.git
