@@ -30,6 +30,8 @@ RUN python3 -m pip install --no-cache-dir https://github.com/Dao-AILab/flash-att
 
 RUN python3 -m pip install --no-cache-dir -r /app/requirements.txt
 
+RUN python3 -m pip install --no-cache-dir -r /app/requirements_custom.txt
+
 COPY app /app/app
 
 ENV HOST=0.0.0.0
