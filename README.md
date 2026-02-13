@@ -38,9 +38,26 @@ curl -X POST http://localhost:8000/v1/audio/speech \
     "input": "Hello from VibeVoice!",
     "voice": "default",
     "response_format": "wav",
-    "stream": true
+    "stream": true,
+    "cfg": 1.8,
+    "temperature": 0.9,
+    "top_p": 0.95,
+    "do_sample": true,
+    "num_beams": 1
   }' --output output.wav
 ```
+
+## TTS inference tuning parameters
+
+You can optionally override generation settings per request on `/v1/audio/speech`:
+
+- `cfg` (`float`): classifier-free guidance scale override.
+- `temperature` (`float`): sampling temperature.
+- `top_p` (`float`): nucleus sampling value.
+- `do_sample` (`bool`): enable/disable sampling.
+- `num_beams` (`int`): beam search width.
+
+If omitted, server/model defaults are used.
 
 ## OpenAI Python client example
 
@@ -57,6 +74,13 @@ response = client.audio.speech.create(
     voice="default",
     input="Hello from the OpenAI Python client!",
     response_format="wav",
+    extra_body={
+        "cfg": 1.8,
+        "temperature": 0.9,
+        "top_p": 0.95,
+        "do_sample": True,
+        "num_beams": 1,
+    },
 )
 response.stream_to_file("output.wav")
 ```

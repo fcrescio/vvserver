@@ -79,9 +79,19 @@ class KugelAudioPipeline:
             sample_rate=sample_rate,
         )
 
-    def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
+    def infer(
+        self,
+        text: str,
+        voice: str = "default",
+        speed: float = 1.0,
+        cfg: float | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        do_sample: bool | None = None,
+        num_beams: int | None = None,
+    ) -> tuple[Any, int]:
         """Generate speech audio for the given text."""
-        del speed
+        del speed, temperature, top_p, do_sample, num_beams
         #selected_voice = self._resolve_voice(voice)
         logger.info(
 #            "KugelAudio infer received text_length=%s voice=%s", len(text), selected_voice
@@ -98,7 +108,10 @@ class KugelAudioPipeline:
             for key, value in inputs.items()
         }
         with torch.no_grad():
-            outputs = self.model.generate(**inputs, cfg_scale=self.cfg_scale)
+            outputs = self.model.generate(
+                **inputs,
+                cfg_scale=self.cfg_scale if cfg is None else cfg,
+            )
         audio = self._extract_audio(outputs)
         return audio, self.sample_rate
 

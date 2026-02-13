@@ -27,6 +27,11 @@ class TTSRequest(BaseModel):
     response_format: str = Field(default="wav")
     speed: float = Field(default=1.0, ge=0.25, le=4.0)
     stream: bool = Field(default=False)
+    cfg: Optional[float] = Field(default=None, gt=0.0)
+    temperature: Optional[float] = Field(default=None, ge=0.0)
+    top_p: Optional[float] = Field(default=None, gt=0.0, le=1.0)
+    do_sample: Optional[bool] = Field(default=None)
+    num_beams: Optional[int] = Field(default=None, ge=1)
 
 
 async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
@@ -55,13 +60,32 @@ def _log_request(payload: TTSRequest) -> None:
         payload.stream,
     )
     logger.debug("Request input preview: %r", payload.input[:200])
+    logger.debug("Request inference overrides: %s", _build_inference_overrides(payload))
+
+
+def _build_inference_overrides(payload: TTSRequest) -> dict[str, Any]:
+    """Collect optional inference tuning values from the API payload."""
+    candidates = {
+        "cfg": payload.cfg,
+        "temperature": payload.temperature,
+        "top_p": payload.top_p,
+        "do_sample": payload.do_sample,
+        "num_beams": payload.num_beams,
+    }
+    return {key: value for key, value in candidates.items() if value is not None}
 
 
 def _run_inference(loaded: Any, payload: TTSRequest) -> Any:
     """Call the underlying pipeline using the supported interface."""
     pipeline = loaded.pipeline
+    inference_overrides = _build_inference_overrides(payload)
     if hasattr(pipeline, "infer"):
-        return pipeline.infer(text=payload.input, voice=payload.voice, speed=payload.speed)
+        return pipeline.infer(
+            text=payload.input,
+            voice=payload.voice,
+            speed=payload.speed,
+            **inference_overrides,
+        )
     return pipeline(payload.input, voice=payload.voice, speed=payload.speed)
 
 

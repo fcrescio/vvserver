@@ -73,7 +73,17 @@ class VibeVoicePipeline:
             inference_steps=inference_steps,
         )
 
-    def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
+    def infer(
+        self,
+        text: str,
+        voice: str = "default",
+        speed: float = 1.0,
+        cfg: float | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        do_sample: bool | None = None,
+        num_beams: int | None = None,
+    ) -> tuple[Any, int]:
         """Generate speech audio for the given text."""
         del speed
         logger.info("VibeVoice full infer received text_length=%s", len(text))
@@ -100,11 +110,12 @@ class VibeVoicePipeline:
             "speech_input_mask": inputs.get("speech_input_mask"),
             "tokenizer": self.processor.tokenizer,
             "generation_config": {
-                "do_sample": False,
-                "temperature": 1.0,
-                "top_p": 1.0,
+                "do_sample": False if do_sample is None else do_sample,
+                "temperature": 1.0 if temperature is None else temperature,
+                "top_p": 1.0 if top_p is None else top_p,
+                "num_beams": 1 if num_beams is None else num_beams,
             },
-            "cfg_scale": self.cfg_scale,
+            "cfg_scale": self.cfg_scale if cfg is None else cfg,
             "return_speech": True,
             "show_progress_bar": False,
         }
