@@ -290,7 +290,17 @@ class VibeVoiceStreamingPipeline:
             return_dict=True,
         )
 
-    def infer(self, text: str, voice: str = "default", speed: float = 1.0) -> tuple[Any, int]:
+    def infer(
+        self,
+        text: str,
+        voice: str = "default",
+        speed: float = 1.0,
+        cfg: float | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        do_sample: bool | None = None,
+        num_beams: int | None = None,
+    ) -> tuple[Any, int]:
         """Generate speech audio for the given text."""
         del speed
         self._log_infer_request(text)
@@ -301,7 +311,15 @@ class VibeVoiceStreamingPipeline:
         tensor_inputs = self._prepare_inputs(script, prefilled_outputs)
         self._log_input_ids_shape(tensor_inputs)
 
-        outputs = self._generate_speech(tensor_inputs, prefilled_outputs)
+        outputs = self._generate_speech(
+            tensor_inputs,
+            prefilled_outputs,
+            cfg=cfg,
+            temperature=temperature,
+            top_p=top_p,
+            do_sample=do_sample,
+            num_beams=num_beams,
+        )
         audio = self._extract_audio(outputs)
         return audio, self.sample_rate
 
@@ -323,7 +341,14 @@ class VibeVoiceStreamingPipeline:
             logger.info("VibeVoice input_ids shape=%s", tuple(input_ids.shape))
 
     def _generate_speech(
-        self, tensor_inputs: dict[str, Any], prefilled_outputs: Any
+        self,
+        tensor_inputs: dict[str, Any],
+        prefilled_outputs: Any,
+        cfg: float | None = None,
+        temperature: float | None = None,
+        top_p: float | None = None,
+        do_sample: bool | None = None,
+        num_beams: int | None = None,
     ) -> Any:
         """Invoke the model to generate speech outputs."""
         self.model.set_ddpm_inference_steps(num_steps=self.inference_steps)
@@ -336,12 +361,13 @@ class VibeVoiceStreamingPipeline:
             all_prefilled_outputs=copy.deepcopy(prefilled_outputs),
             tokenizer=self.processor.tokenizer,
             generation_config={
-                    "do_sample": False,
-                    "temperature": 1.0,
-                    "top_p": 1.0,
-                },
+                "do_sample": False if do_sample is None else do_sample,
+                "temperature": 1.0 if temperature is None else temperature,
+                "top_p": 1.0 if top_p is None else top_p,
+                "num_beams": 1 if num_beams is None else num_beams,
+            },
             refresh_negative=True,
-            cfg_scale=1.5,
+            cfg_scale=1.5 if cfg is None else cfg,
             return_speech=True,
             show_progress_bar=False,
         )
