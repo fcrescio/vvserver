@@ -5,3 +5,4 @@ numpy==1.26.4
 soundfile==0.12.1
 bitsandbytes==0.49.1
 pydub==0.25.1
+qwen-tts

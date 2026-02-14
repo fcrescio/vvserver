@@ -32,6 +32,17 @@ class TTSRequest(BaseModel):
     top_p: Optional[float] = Field(default=None, gt=0.0, le=1.0)
     do_sample: Optional[bool] = Field(default=None)
     num_beams: Optional[int] = Field(default=None, ge=1)
+    language: Optional[str] = Field(default=None)
+    ref_audio: Optional[Any] = Field(default=None)
+    ref_text: Optional[Any] = Field(default=None)
+    x_vector_only_mode: Optional[Any] = Field(default=None)
+    max_new_tokens: Optional[int] = Field(default=None, ge=1)
+    top_k: Optional[int] = Field(default=None, ge=1)
+    repetition_penalty: Optional[float] = Field(default=None, gt=0.0)
+    subtalker_dosample: Optional[bool] = Field(default=None)
+    subtalker_top_k: Optional[int] = Field(default=None, ge=1)
+    subtalker_top_p: Optional[float] = Field(default=None, gt=0.0, le=1.0)
+    subtalker_temperature: Optional[float] = Field(default=None, ge=0.0)
 
 
 async def _synthesize_audio(payload: TTSRequest) -> tuple[np.ndarray, int]:
@@ -71,6 +82,17 @@ def _build_inference_overrides(payload: TTSRequest) -> dict[str, Any]:
         "top_p": payload.top_p,
         "do_sample": payload.do_sample,
         "num_beams": payload.num_beams,
+        "language": payload.language,
+        "ref_audio": payload.ref_audio,
+        "ref_text": payload.ref_text,
+        "x_vector_only_mode": payload.x_vector_only_mode,
+        "max_new_tokens": payload.max_new_tokens,
+        "top_k": payload.top_k,
+        "repetition_penalty": payload.repetition_penalty,
+        "subtalker_dosample": payload.subtalker_dosample,
+        "subtalker_top_k": payload.subtalker_top_k,
+        "subtalker_top_p": payload.subtalker_top_p,
+        "subtalker_temperature": payload.subtalker_temperature,
     }
     return {key: value for key, value in candidates.items() if value is not None}
 

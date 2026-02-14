@@ -22,6 +22,8 @@ def _default_model_id() -> str:
 
 def _default_pipeline_import(model_id: str) -> str:
     normalized = model_id.lower()
+    if "qwen3-tts" in normalized:
+        return "app.qwen3_tts_pipeline:Qwen3TTSPipeline"
     if "kugelaudio" in normalized:
         return "app.kugelaudio_pipeline:KugelAudioPipeline"
     if "realtime" in normalized or "streaming" in normalized:

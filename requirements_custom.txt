@@ -1,2 +1,3 @@
 vibevoice @ git+https://github.com/fcrescio/VibeVoice.git@10ef13b
 kugelaudio-open @ git+https://github.com/fcrescio/kugelaudio-open.git
+qwen-tts
