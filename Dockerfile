@@ -37,11 +37,11 @@ RUN uv pip install torch==2.10.0+cu126 --index-url https://download.pytorch.org/
 RUN uv pip install https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3%2Bcu126torch2.10-cp312-cp312-linux_x86_64.whl
 #RUN python3 -m pip install --no-cache-dir flash-attn==2.6.3
 
-RUN uv pip sync /app/requirements.txt
+RUN uv pip install -r /app/requirements.txt
 
 COPY requirements_custom.txt /app/requirements_custom.txt
 
-RUN uv pip sync /app/requirements_custom.txt
+RUN uv pip install -r /app/requirements_custom.txt
 
 COPY app /app/app
 
