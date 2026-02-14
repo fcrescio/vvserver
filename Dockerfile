@@ -14,6 +14,13 @@ RUN apt-get update \
         build-essential \
         libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
+# (base Debian/Ubuntu con python3 già presente)
+
+COPY --from=ghcr.io/astral-sh/uv:debian /usr/local/bin/uv /usr/local/bin/uv
+
+ENV VENV=/opt/venv
+RUN python3 -m venv $VENV
+ENV PATH="$VENV/bin:$PATH"
 
 WORKDIR /app
 
@@ -22,19 +29,19 @@ ENV HF_HOME=/data/huggingface
 RUN mkdir -p ${HF_HOME}
 
 COPY requirements.txt /app/requirements.txt
-RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
+#RUN python3 -m pip install --no-cache-dir --upgrade pip wheel packaging
 
-RUN python3 -m pip install --no-cache-dir torch==2.10.0+cu126 --index-url https://download.pytorch.org/whl/cu126
+RUN uv pip install torch==2.10.0+cu126 --index-url https://download.pytorch.org/whl/cu126
 
 #RUN python3 -m pip install --no-cache-dir https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
-RUN python3 -m pip install --no-cache-dir https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3%2Bcu126torch2.10-cp312-cp312-linux_x86_64.whl
+RUN uv pip install https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3%2Bcu126torch2.10-cp312-cp312-linux_x86_64.whl
 #RUN python3 -m pip install --no-cache-dir flash-attn==2.6.3
 
-RUN python3 -m pip install --no-cache-dir --no-upgrade -r /app/requirements.txt
+RUN uv pip sync /app/requirements.txt
 
 COPY requirements_custom.txt /app/requirements_custom.txt
 
-RUN python3 -m pip install --no-cache-dir -r /app/requirements_custom.txt
+RUN uv pip sync /app/requirements_custom.txt
 
 COPY app /app/app
 
